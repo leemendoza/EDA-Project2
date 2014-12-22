@@ -23,7 +23,7 @@ totalEmissions = aggregate(Emissions ~ year, data = NEI, sum)
 ## Show 'em
 barplot(totalEmissions$Emissions, 
         names.arg = totalEmissions$year, 
-        main = "US Total Emissions"
+        main = "US Total Emissions",
         xlab = "Year", 
         ylab = expression('PM'[25]*' Emissions (Tons)') )
 
@@ -41,7 +41,7 @@ baltEmissions = aggregate(Emissions ~ year, data = balt, sum)
 ## plot 'em
 barplot(baltEmissions$Emissions, 
         names.arg = baltEmissions$year, 
-        main = "Baltimore Total Emissions"
+        main = "Baltimore Total Emissions",
         xlab = "Year", 
         ylab = expression('PM'[25]*' Emissions (Tons)') )
 
@@ -61,12 +61,14 @@ baltEmissions = ddply(balt, c("year", "type"), summarize, sum = sum(Emissions))
 qplot(data = baltEmissions, 
       x = year, 
       y = sum, 
+      ylab = expression('PM'[25]*' Emissions (Tons)'), 
+      xlab = "Year",
       main = "Baltimore Emission Sources",
       fill = type, 
       geom = "bar", 
       stat="identity", 
       position = "dodge")
-ggplot(data = baltEmissions, aes(x = year, y = sum, xlab = "Year", ylab = "PM25 Emissions (Tons)") ) + geom_bar(stat="identity") + facet_wrap(~ type, nrow = 2)
+
 
 ## Plot 4
 ## Across the United States, how have emissions from coal combustion-related 
@@ -105,3 +107,24 @@ barplot(vehicleEmissions$Emissions,
 ## with emissions from motor vehicle sources in Los Angeles County, 
 ## California (fips == "06037"). Which city has seen greater changes 
 ## over time in motor vehicle emissions?
+## get just vehicle sources
+vehicle_scc = SCC[grep("Vehicle", SCC$EI.Sector) , ]
+vehicle = NEI[NEI$SCC %in% vehicle_scc$SCC, ]
+
+## get the data for the target cities
+cities = vehicle[vehicle$fips %in% c("24510", "06037"), ]
+cities$fips[which(cities$fips == "06037")] = "Los Angeles"
+cities$fips[which(cities$fips == "24510")] = "Baltimore"
+names(cities)[1] = "Cities"
+cityEmissions = ddply(cities, c("year", "Cities"), summarize, sum = sum(Emissions))
+cityEmissions$year = as.factor(cityEmissions$year)
+qplot(data = cityEmissions, 
+      x = year, 
+      y = sum, 
+      ylab = expression('PM'[25]*' Emissions (Tons)'), 
+      xlab = "Year",
+      main = "Vehicle Emission Sources",
+      fill = Cities, 
+      geom = "bar", 
+      stat="identity", 
+      position = "dodge")
